@@ -1,0 +1,95 @@
+#!/usr/bin/env zsh
+# ----------------------------------------------------------------------------- #
+#         File: list
+#  Description: wrapper over 'ls' so I don't have to remember zsh's great expansions
+#       Author: rkumar http://github.com/rkumar/rbcurse/
+#         Date: 2012-12-02 - 17:07
+#  Last update: 2012-12-12 20:42
+#      License: Free
+#  If you want to use 'v', get from https://gist.github.com/4188977
+#  Location: https://gist.github.com/4189019
+# ----------------------------------------------------------------------------- #
+#
+setopt EXTENDED_GLOB
+OPT=${*:-${OPT}}
+MYVER=0.0.1
+while [[ $1 = -* ]]; do
+case "$1" in
+    -h|--help)
+cat <<!
+list $MYVER  Copyright (C) 2012 rahul kumar
+This program lists files based on certain criteria. 
+It wraps ls (mostly).
+You may pass arguments to 'ls' such as "-l" or "-ltrh".
+For 'v' copy from: https://gist.github.com/4188977
+All arguments are passed to ls.
+!
+        exit
+        ;;
+    --source)
+        echo "this is to edit the source "
+        vim $0
+        exit
+        ;;
+    *)
+        shift
+    ;;
+esac
+done
+BOLD="\\033[1m"
+BOLDOFF="\\033[22m"
+GREEN="\\033[1;32;44m"
+RED="\\033[1;37;41m"
+YELLOW="\\033[0;30;45m"
+export DEFAULT="\\033[0m"
+INDENT1=" "
+INDENT2="     "
+# takes options such as -l
+echo -e "     ${BOLD}Directory listing options:${BOLDOFF}"
+echo "${INDENT2}d    Only dirs"
+echo "${INDENT2}f    Only files"
+echo "${INDENT1}${YELLOW}Modification or Access:${DEFAULT}"
+echo "${INDENT2}t    Modified today                              Z    today (non-zip)"
+echo "${INDENT2}o    Old files (not modified for a year)         "
+echo "${INDENT2}a    Files accessed today                                  "
+echo "${INDENT2}A    Files not accessed for a year"
+echo "${INDENT1}${YELLOW}File Size :${DEFAULT}"
+echo "${INDENT2}0   zero-byte files"
+echo "${INDENT2}s   small files < 20 bytes"
+echo "${INDENT2}l   large files > 2mb"
+echo "${INDENT2}L   large files  > 10 mb (recursive)"
+echo "${INDENT2}S   largest files, sort on Size (recursive)"
+echo "${INDENT1}${YELLOW}Miscellaneous:${DEFAULT}"
+echo "${INDENT2}x   Executable files "
+echo "${INDENT2}X   non-Executable files "
+echo "${INDENT2}4   files without extension "
+echo "${INDENT2}.   dot files"
+echo "${INDENT2}8   Directory Sizes"
+echo ""
+echo -n "Enter Choice: "
+read -q ans ; 
+echo
+case "$ans" in
+    1|d) ls $OPT -d *(/)  ;;
+2|f)  ls $OPT *(.) ;;
+.)  ls $OPT .*(.) ;;
+    t) ls $OPT *(.m0) ;;
+    Z) ls $OPT *~(*.bz2|*.gz|*.tgz|*.zip|*.z)(.m0) ;;
+4) ls *~*.*(.) 
+    #ls -d -- ^?*.*(.) || echo ${RED}'try on command line:\n'${DEFAULT}'ls -d -- ^?*.*(.)'
+    ;;
+o) ls $OPT -l *(.^m-365) ;;
+a) ls $OPT -u *(.a0);;
+A) ls $OPT -u *(.^a-365);;
+0) ls $OPT *(.L0) ;;
+s) ls $OPT *(.L-20) ;;
+l) ls $OPT *(.Lm+2) ;;
+L) ls $OPT **/*(.Lm+10) ;;
+S) ls $OPT -hlS **/*(.Lm+2)  | less ;;
+6|x) ls $OPT *(*);;
+7|X) ls $OPT *(.^*);;
+8)  du -sk *(/) ;;
+v)  v ;;
+ **) echo "Wrong Choice $ans\n" ;;
+esac
+

@@ -1,0 +1,155 @@
+#!/usr/bin/env zsh
+# ----------------------------------------------------------------------------- #
+#         File: listquery
+#  Description: list files with query on size and age
+#       Author: rkumar http://github.com/rkumar/rbcurse/
+#         Date: 2012-12-05 - 19:38
+#      License: Same as Ruby's License (http://www.ruby-lang.org/LICENSE.txt)
+#  Last update: 2012-12-10 19:54
+# ----------------------------------------------------------------------------- #
+# listquery  Copyright (C) 2012 rahul kumar
+#OPT=$*
+autoload colors; colors
+#OPT=""
+OPT=${OPT:-""}
+RESULT=""
+MYVER=0.0.1
+VERBOSE=1
+INDENT1=""
+INDENT2="    "
+while [[ $1 = -* ]]; do
+case "$1" in
+    -h|--help)
+cat <<!
+listquery $MYVER  Copyright (C) 2012 rahul kumar
+This program lists files based on certain criteria. 
+It wraps ls (mostly).
+You may pass arguments to 'ls' such as "-l" or "-ltrh".
+For recursive search, use -R which converts to **/
+To suppress echo, use --quiet.
+All arguments are passed to ls.
+!
+        exit
+        ;;
+    --source)
+        echo "this is to edit the source "
+        vim $0
+        exit
+        ;;
+    -R|--recursive)
+        REC='**/'
+        shift
+        ;;
+    --quiet)
+        VERBOSE=
+        shift
+        ;;
+    *)
+        OPT="${OPT} $1"
+        shift
+    ;;
+esac
+done
+dispmenus(){
+    typeset -A menus 
+    menus=(g greater_than l less_than e equal)
+    echo "${INDENT1}$fg[magenta]$bg[black]Size choices [g]:${reset_color}"
+    for f (${(k)menus}) print -l "${INDENT2}[$f]  => ${menus[$f]}"
+        read -q 'ans?=> '
+        echo ""
+        ans=$(echo $ans | tr -d '[\n\r ]')
+        [[ -z $ans ]] && ans="g"
+        typeset -A mopts
+        mopts=(g + l - e '')
+        mopt=${mopts[$ans]}
+        #echo "got $ans , $mopt"
+
+
+    typeset -A sopts 
+    sopts=(m mb k kb p block b byte)
+    echo "${INDENT1}$fg[magenta]$bg[black]Size unit choices [k]:${reset_color}"
+    for f (${(k)sopts}) print -l "${INDENT2}[$f]  => ${sopts[$f]}"
+        read -q 'sopt?=> '
+        # use default value
+        sopt=$(echo $sopt | tr -d '[\n\r ]')
+        [[ -z $sopt ]] && sopt="k"
+        # q means quit
+        [[ "q" == $sopt ]] && exit
+        # wrong value exit (or put default)
+        [[ -z ${sopts[$sopt]} ]] && exit
+        default=50
+        case $sopt in
+            k|K) default=50 ;;
+            m|M) default=5 ;;
+            b|B) default=100 ;;
+            p|P) default=100 ;;
+        esac
+
+        echo -n "\n${INDENT1}$fg[magenta]$bg[black]Enter size (${sopts[$sopt]}) [$default]: ${reset_color}"
+    read size
+    [[ -z $size ]] && size=$default
+    [[ $sopt == "b" ]] && sopt=""
+    [[ ! -z $VERBOSE ]] && echo "ls $OPT ${REC}*(.L${sopt}${mopt}${size})"
+    RESULT="L${sopt}${mopt}${size}"
+    #eval "ls $OPT ${REC}*(.m${sopt}${mopt}${size})"
+}
+
+dispmenum(){
+    typeset -A menum 
+    menum=(o older n newer e equal)
+    echo "${INDENT1}$fg[magenta]$bg[black]File modification choices [n]:${reset_color}"
+    for f (${(k)menum}) print -l "${INDENT2}[$f]  => ${menum[$f]}"
+        read -q 'ans?=> '
+        ans=$(echo $ans | tr -d '[\n\r ]')
+        [[ -z $ans ]] && ans="n"
+        echo ""
+        typeset -A mopts
+        mopts=(o + n - e '')
+        mopt=${mopts[$ans]}
+        #echo "got $ans , $mopt"
+
+    typeset -A sopts 
+    sopts=(M Months w weeks d days h hours m minutes s seconds)
+
+    echo "${INDENT1}$fg[magenta]$bg[black]Time period choices  [d]:${reset_color}"
+    #menum=sopts
+    for f (${(k)sopts}) print -l "${INDENT2}[$f]  => ${sopts[$f]}"
+        read -q 'sopt?=> '
+        [[ "q" == $sopt ]] && exit
+        sopt=$(echo $sopt | tr -d '[\n\r ]')
+        [[ -z "$sopt" ]] && sopt="d"
+        [[ -z ${sopts[$sopt]} ]] && sopt="d"
+
+        echo -n "\n${INDENT1}$fg[magenta]$bg[black]Enter period (${sopts[$sopt]}) [1]: ${reset_color}"
+    read size
+    [[ -z $size ]] && size=1
+    [[ ! -z $VERBOSE ]] && echo "ls $OPT ${REC}*(.m${sopt}${mopt}${size})"
+    RESULT="m${sopt}${mopt}${size}"
+    #eval "ls $OPT ${REC}*(.m${sopt}${mopt}${size})"
+}
+echo "${INDENT1}$bg[black]$fg_bold[magenta]Enter filter:${reset_color}"
+R=""
+typeset -A menu1
+menu1=(m modified s size)
+for f (${(k)menu1}) print -l "${INDENT2}[$f]  => ${menu1[$f]}"
+    echo "${INDENT2}[b]  =>  both"
+    echo "${INDENT2}[q]  =>  quit"
+    read -q 'ans?=> '
+    echo ""
+
+    case "$ans" in
+        m) dispmenum 
+            eval "ls $OPT ${REC}*(.$RESULT)"
+           ;;
+        s) dispmenus
+            eval "ls $OPT ${REC}*(.$RESULT)"
+           ;;
+       b) dispmenum
+           R="${RESULT}"
+           dispmenus
+           R="${R}${RESULT}"
+           [[ ! -z $VERBOSE ]] && echo "ls $OPT ${REC}*(.$R)"
+            eval "ls $OPT ${REC}*(.$R)"
+           ;;
+   esac
+
