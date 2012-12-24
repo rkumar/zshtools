@@ -9,9 +9,11 @@ e.g. after invoking list, on pressing "t" one gets today's modified files, or on
 
 I then made a slightly more complex list query tool (again single key presses to make it fast) so I can query fies based on modification times and sizes or both. Its called `listquery`.  
 
-listquery also prints out the command to be executed so you can learn the various zsh globbing options.
+**listquery** also prints out the command to be executed so you can learn the various zsh globbing options.
 
-That led me to write a directory lister and chooser which is hotkey based. After a couple of different iterations, I made zfm (https://github.com/rkumar/zfm). Check out tools.zsh and modify it to your need. It should be here but it relies on common files that are in zfm. I am not sure how to maintain a common dependency.  
+That led me to write a directory lister and chooser which is hotkey based. After a couple of different iterations, I made zfm (https://github.com/rkumar/zfm).  
+
+Check out **tools.zsh** and modify it to your need. It relies on menu.zsh which is in zfm, so you need to install that or copy the file over. tools.zsh easily allows me to zip files modified today or in the last hour on single key presses. There are other brew related options too. However, it doesn't allow multiple selection in the menus yet.  
 
 I am running these scripts on zsh v5.0.x (homebrew on OSX Mountain Lion, in iTerm and tmux).
 
