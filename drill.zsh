@@ -5,7 +5,8 @@
 #       Author: rkumar http://github.com/rkumar/rbcurse/
 #         Date: 2012-12-25 - 12:39
 #      License: Freeware / GPL
-#  Last update: 2012-12-25 19:04
+#  Last update: 2012-12-25 19:14
+#       Status: Heavy work in progress, copy and use at your own risk
 # ----------------------------------------------------------------------------- #
 
 # not sure whether i should come out immediately when one gets selected or remain 
@@ -17,6 +18,7 @@ export COLOR_RED="\\033[1;31m"
 export COLOR_GREEN="\\033[1;32m"
 export COLOR_BOLD="\\033[1m"
 export COLOR_BOLDOFF="\\033[22m"
+# TODO use existing values if in ENV
 ZFM_PAGE_KEY=' '
 ZFM_RESET_PATTERN_KEY='.'
 ZFM_SELECT_KEY='@'
