@@ -5,15 +5,23 @@
 #       Author: rkumar http://github.com/rkumar/rbcurse/
 #         Date: 2012-12-25 - 12:39
 #      License: Freeware / GPL
-#  Last update: 2012-12-25 15:33
+#  Last update: 2012-12-25 19:04
 # ----------------------------------------------------------------------------- #
 
 # not sure whether i should come out immediately when one gets selected or remain 
 # in there so user can explicitly say select and maybe select more
 # Usage will define how this goes
+#
+export COLOR_DEFAULT="\\033[0m"
+export COLOR_RED="\\033[1;31m"
+export COLOR_GREEN="\\033[1;32m"
+export COLOR_BOLD="\\033[1m"
+export COLOR_BOLDOFF="\\033[22m"
 ZFM_PAGE_KEY=' '
 ZFM_RESET_PATTERN_KEY='.'
 ZFM_SELECT_KEY='@'
+ZFM_QUIT_KEY='q'
+ZFM_EXIT_KEY='q'
 MFM_NLIDX="TODO XXX123..a-z..A-Z"
 PAGESZ=59     # used for incrementing while paging
 (( PAGESZ1 = PAGESZ + 1 ))
@@ -59,7 +67,14 @@ _drill() {
         local sortorder=""
         [[ -n $ZFM_SORT_ORDER ]] && sortorder="o=$ZFM_SORT_ORDER"
         print_title "$title $sta to $fin of $tot ${COLOR_GREEN}$sortorder $ZFM_STRING${COLOR_DEFAULT}"
-        print -rC$cols $(print -rl -- $viewport | nl1.sh -p "$patt" | cut -c-$width | tr "[ \t]" "?"  ) | tr -s "" |  tr "" " " 
+        # #
+        #  Both nl1 and print_files need to have the item name and both modify the output
+        #  one adds a number the other colors it. So the second one is unable to function
+        #  correctly
+        # # 
+        print -rC$cols $(print_files $viewport | nl1.sh -p "$patt" | tr " " "" ) | tr -s "" |  tr "" " " 
+        #print -rC$cols $(print_files $viewport | nl1.sh -p "$patt" | cut -c-$width | tr "[ \t]" "?"  ) | tr -s "" |  tr "" " " 
+        #print -rC$cols $(print -rl -- $viewport | nl1.sh -p "$patt" | cut -c-$width | tr "[ \t]" "?"  ) | tr -s "" |  tr "" " " 
         echo -n "$patt > "
         bindkey -s "OD" ","
         bindkey -s "OA" "~"
@@ -78,6 +93,10 @@ _drill() {
                 # SPACE space, however may change to ENTER due to spaces in filenames
                 (( sta += $PAGESZ1 ))
                 [[ $fin -gt $tot ]] && fin=$tot
+                ;;
+            $ZFM_SELECT_KEY)
+                _select_all
+                break
                 ;;
             [1-9])
                 # KEY PRESS key
@@ -134,7 +153,10 @@ _drill() {
                 # if you press this anywhere while typing it will toggle ^
                 toggle_match_from_start
                 ;;
-            "q")
+            $ZFM_QUIT_KEY)
+                break
+                ;;
+            $ZFM_EXIT_KEY)
                 break
                 ;;
             [a-zA-Z_0\.\ ])
@@ -215,12 +237,35 @@ _drill() {
 
     done
     echo $selection
+    [[ -n "$selection" ]] && {
+        if [[ $selected[(i)$selection] -gt $#selected ]]; then
+           selected=(
+           $selected
+           $selection
+           )
+       else
+           selected[(i)$selection]=()
+       fi
+
+    }
+}
+typeset -U selected
+selected=()
+del=$''
+print_files() {
+let c=1
+    for f
+    do
+        if [[ $selected[(i)$f] -gt $#selected ]]; then
+            echo "$f"
+        else
+            echo "$COLOR_BOLD$f$COLOR_DEFAULT"
+        fi
+        let c++
+    done
 }
 check_patt() {
 
-        #local p=${1:s/^//}
-        #lines=$(print -rl -- ${p}*)
-        #echo $lines
         patt=$1
         # now we only check within the given array, no looking at dir listing since
         # the data could be anything
@@ -248,11 +293,16 @@ _multiselect() {
     selected_items=()
     shift
     # drill down should allow selection of all in view using @ TODO
+    # selected items should be shown highlighted or something
+    # so multi has to be part of the main thing
     while (true)
     do
-        local ct=$#selected_items
+        local ct=$#selected
         _drill "$title ($ct)" $@
-        [[ -z "$selection" ]] && { break }
+        [[ "$ans" == $ZFM_QUIT_KEY ]] && break
+        # next line fails if multiple selection
+        #[[ -z "$selection" ]] && { break }
+        # select all puts into selected
         [[ -n "$selection" ]] && {
             selected_items=(
             $selected_items
@@ -264,6 +314,16 @@ _multiselect() {
     print -rl -- $selected_items
 
 
+}
+#  selects all in the current view
+_select_all() {
+    for fs in $viewport
+    do
+            selected=(
+            $selected
+            $fs
+            )
+    done
 }
 source ~/bin/menu.zsh
 _multiselect "Directory Listing $PWD" $@
