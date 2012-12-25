@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-ZFM_DIR=${ZFM_DIR:~/bin}
+ZFM_DIR=${ZFM_DIR:-~/bin}
 # Created: 2012-12-10 - 18:30 
 # TODO make a set of methods in a file to be sourced
 # that return files for a query. then use these in various utils
