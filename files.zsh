@@ -6,7 +6,7 @@ today() {
     checkargs $*;
     #ls *${exclude}(.${not}m0)
     #echo "ls *${exclude}(.${not}m0)"
-    eval "ls *${exclude}(.${not}m0)"
+    eval "print -rl -- *${exclude}(.${not}m0)"
 }
 newerthan() {
     setopt EXTENDED_GLOB
