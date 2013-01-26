@@ -14,8 +14,12 @@ mybs(){  =ls /usr/local/Library/Formula/ | grep $1 | sed 's/\.rb$//g' | sort }
 sl() {
     ~/bin/sl | $PAGER
 }
+b_all() {
+    tar zcvf $arch *~(*.bz2|*.gz|*.tgz|*.zip|*.z)(.)
+}
 b_today() {
     #arch="arch${x}_${ddate}.tgz"
+    # file with spces will not get zipped XXX
     tar zcvf $arch $(today --nozip)
 }
 b_week() {
@@ -33,10 +37,12 @@ b_hour() {
     (( $#files > 0 )) && tar zcvf $arch $(print -rl -- $files)
 }
 backup...() {
-    source $ZFM_DIR/files.zsh
+    # ouch this may not be in the ZFM dir if you keep a separate dir for ZFM
+    #source $ZFM_DIR/files.zsh
+    source ~/bin/files.zsh
     ddate=$(date +%Y%m%d_%H%M)
     arch="arch${x}_${ddate}.tgz"
-    menu_loop ">Backup Menu" "today week month hour" "twmh"
+    menu_loop ">Backup Menu" "today week month hour all" "twmha"
     [[ -n "$menu_text" ]] && {
         eval "b_${menu_text}"
         [ -f "$arch" ] && {
@@ -108,6 +114,42 @@ brew...(){
         esac
     done
 }
+git...(){
+    while (true); do
+        menu_loop ">Git Menu" "push newbranch mergebranch list newtag"  "pnmlt"
+        case $menu_text in
+            "push")
+                gitpush
+                ;;
+            "newbranch")
+                vared -c -p "Enter Branch Name: " branch
+                git checkout -b $branch
+                ;;
+            "mergebranch")
+                branch=master
+                vared -c -p "Enter Target Branch Name: " branch
+                source=$(git rev-parse --abbrev-ref HEAD)
+                vared -c -p "Enter Source Branch Name: " source
+                print "Going to merge $source into $branch. OK?"
+                read
+                git checkout $branch
+                git merge $source
+                ;;
+            "list")
+                git branch
+                ;;
+            "newtag")
+                vared -c -p "Enter tag name: " tagname
+                tagdesc="Release $tagname"
+                vared -c -p "Enter tag description: " tagdesc
+                ## prepends a 'v' to tagname e.g. v1.1
+                git tag -a -m $tagdesc v$tagname
+                ;;
+            *) break
+                ;;
+        esac
+    done
+}
 rb() {
     echo $PATH
     which ruby
@@ -162,10 +204,11 @@ others...(){
 }
 OPT=${OPT:-"-l"}
 export OPT
-source ${ZFM_DIR}/menu.zsh
+
+source ${ZFM_DIR}/zfm_menu.zsh
 
 while (true); do
-    menu_loop "Options Menu" "v vifm ranger vshnu list listquery backup... others... brew..." "v r l zob"
+    menu_loop "Options Menu" "v vifm ranger vshnu list listquery backup... others... brew... git..." "v r l zobg"
     [[ -z "$menu_text" ]] && { echo "bye" ; exit }
     $menu_text
 done
