@@ -5,7 +5,7 @@
 #       Author: rkumar http://github.com/rkumar/rbcurse/
 #         Date: 2012-12-25 - 12:39
 #      License: Freeware / GPL
-#  Last update: 2012-12-25 19:14
+#  Last update: 2012-12-26 14:15
 #       Status: Heavy work in progress, copy and use at your own risk
 # ----------------------------------------------------------------------------- #
 
@@ -327,6 +327,6 @@ _select_all() {
             )
     done
 }
-source ~/bin/menu.zsh
+source ~/bin/zfm_menu.zsh
 _multiselect "Directory Listing $PWD" $@
 #_drill "Directory Listing $PWD" $@
